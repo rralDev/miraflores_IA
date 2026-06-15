@@ -26,6 +26,47 @@ La aplicación se divide en 4 módulos clave:
    - Ranking de las organizaciones vecinales con más proyectos priorizados.
    - Presentación del Comité de Vigilancia elegido democráticamente.
 
+## 📖 Guía de Uso Paso a Paso (Para Demos)
+
+A continuación, se detalla el flujo completo para utilizar la plataforma y demostrar todas sus capacidades:
+
+### 1. Explorar el Radar del Desarrollo
+1. Ingresa a la plataforma y dirígete a la pestaña superior **"Radar"**.
+2. Observa el mapa interactivo de Miraflores. Puedes hacer clic en las distintas zonas o en los marcadores existentes para ver proyectos previos.
+3. Para proponer una idea rápida, haz clic en el botón flotante **"📍 Registrar Idea de Mejora"**. 
+4. Aparecerá una ventana modal donde podrás ingresar tu reporte, seleccionar tu zona y detallar el problema. Al guardar, aparecerá un nuevo pin interactivo en el mapa.
+
+### 2. Registrar un Agente Participante (Inscripción)
+1. Navega a la pestaña **"Inscripción"**.
+2. Llena el formulario simulando ser un representante de una Junta Vecinal o Asociación.
+3. Ingresa tu DNI, los datos de la organización y el número de miembros.
+4. Sube (o arrastra) archivos simulados para tu "Acta de Constitución" y "DNI".
+5. Al enviar, el sistema te mostrará una alerta de éxito simulando que tu organización ha sido acreditada oficialmente.
+
+### 3. Crear un Proyecto con Inteligencia Artificial (Core)
+Esta es la función principal de la plataforma. Dirígete a la pestaña **"Crea tu Proyecto"**:
+
+* **Paso 1: Identificación** 
+  - Ingresa un DNI de un agente registrado para acceder al sistema. 
+  - *Para pruebas, puedes usar el DNI de ejemplo:* `44556677`. Haz clic en **Validar**.
+* **Paso 2: Tu Idea** 
+  - Escribe en tus propias palabras qué necesita tu cuadra o zona. 
+  - *Ejemplo:* "Necesitamos cambiar las tuberías y la matriz de agua y desagüe porque están muy viejas y se filtra el agua." o "Quiero más seguridad, cámaras y serenos contra los robos". Haz clic en **Estructurar con IA**.
+* **Paso 3: Formular (Procesamiento)** 
+  - El sistema mostrará una animación de carga mientras la "IA" analiza tus palabras clave, detecta el problema y busca la mejor solución técnica.
+* **Paso 4: Evidencias** 
+  - Haz clic en el mapa interactivo para colocar un pin exactamente donde se necesita la obra.
+  - Sube fotos de evidencia (archivos locales) para adjuntarlas al expediente. Haz clic en **Generar Perfil Final**.
+* **Paso 5: Resultado y Exportación** 
+  - Visualiza en pantalla tu idea transformada en un proyecto técnico con título profesional, alineado a un Objetivo Estratégico (OED), e impactando a una población específica.
+  - Haz clic en el botón verde **"📄 Descargar Anexo 05 Oficial"**. El sistema generará instantáneamente un archivo PDF con formato oficial de la Municipalidad, incluyendo el mapa de ubicación, las coordenadas exactas y tus fotos adjuntas.
+
+### 4. Revisar la Transparencia (Muro de Honor)
+1. Ve a la pestaña **"Muro de Honor"**.
+2. Observa el ranking de organizaciones (con sus medallas).
+3. Revisa los avatares de los Héroes de la Transparencia (Comité de Vigilancia).
+4. Mira la lista de las asociaciones recientemente inscritas.
+
 ## 🛠️ Tecnologías Utilizadas
 
 Este prototipo fue construido pensando en la agilidad y el despliegue inmediato. Es un proyecto **100% Frontend** (no requiere servidor de base de datos pesado para las demostraciones):
