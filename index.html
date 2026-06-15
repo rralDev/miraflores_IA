@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Municipalidad de Miraflores - Hackatón</title>
+    
+    <!-- Bootstrap 5 CSS CDN para diseño responsivo rápido -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome CDN para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Incluir Chart.js y Plugin DataLabels -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <!-- CSS Personalizado -->
+    <style>
+        /* Variables de color institucionales */
+        :root {
+            --color-verde: #2d8c3c; /* Verde ecológico */
+            --color-azul: #0a2342; /* Azul marino */
+            --color-blanco: #ffffff;
+            --color-fondo: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--color-fondo);
+            color: #333;
+            /* Accesibilidad: Fuente base grande (1.1rem) pensada en público de 35-55 años */
+            font-size: 1.1rem; 
+            padding-top: 80px; /* Espacio para que el navbar fijo no tape el contenido */
+        }
+        /* Custom Pills for Inscripcion */
+        .nav-pills-custom .nav-link {
+            color: #6c757d;
+            background-color: #ffffff;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+            font-size: 1.05rem;
+        }
+        .nav-pills-custom .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+            border-color: #ced4da;
+        }
+        .nav-pills-custom .nav-link#nuevo-tab.active {
+            background-color: var(--color-verde);
+            color: white;
+            border-color: var(--color-verde);
+            box-shadow: 0 4px 8px rgba(45, 140, 60, 0.3);
+        }
+        .nav-pills-custom .nav-link#renovar-tab.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+            box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+        }
+
+        /* ----- NAVBAR ----- */
+        .navbar-custom {
+            background-color: var(--color-blanco);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .navbar-custom .navbar-brand img {
+            max-height: 55px; /* Tamaño del logo */
+        }
+
+        .navbar-custom .nav-link {
+            color: var(--color-azul);
+            font-weight: 500;
+            font-size: 1.15rem;
+            margin: 0 8px;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+
+        .navbar-custom .nav-link:hover, 
+        .navbar-custom .nav-link.active {
+            color: var(--color-verde);
+            transform: translateY(-2px);
+        }
+
+        /* ----- SECCIONES SPA ----- */
+        .spa-section {
+            display: none; /* Ocultas por defecto */
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .spa-section.active {
+            display: block; /* Solo se muestra la sección activa */
+        }
+
+        /* Animación de transición suave */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ----- TIPOGRAFÍA Y TARJETAS ----- */
+        h1, h2, h3 {
+            color: var(--color-azul);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .content-card {
+            background: var(--color-blanco);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            margin-bottom: 2rem;
+            border-top: 4px solid var(--color-verde);
+        }
+
+        /* ----- BOTONES ----- */
+        .btn-custom-primary {
+            background-color: var(--color-verde);
+            color: var(--color-blanco);
+            border: none;
+            padding: 12px 28px;
+            font-size: 1.15rem;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(45, 140, 60, 0.2);
+        }
+
+        .btn-custom-primary:hover {
+            background-color: #247532;
+            color: var(--color-blanco);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(45, 140, 60, 0.3);
+        }
+        
+        .module-placeholder {
+            border: 2px dashed #cbd5e1;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        /* ----- PANEL RESUMEN ----- */
+        #panel-resumen {
+            background-color: var(--color-fondo);
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .proyecto-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--color-verde);
+        }
+
+        /* ----- MAPA ZONAS LABELS ----- */
+        .zone-label-tooltip {
+            background-color: transparent;
+            border: none;
+            box-shadow: none;
+            font-weight: 800;
+            color: #0d47a1;
+            font-size: 1.2rem;
+            text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+            pointer-events: none;
+        }
+
+        /* ----- CUSTOM PINS ----- */
+        .custom-pin-container {
+            background: transparent;
+            border: none;
+        }
+        .pin-wrapper {
+            transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out;
+            transform-origin: bottom center;
+        }
+        .pin-wrapper:hover {
+            transform: scale(1.3);
+            filter: drop-shadow(0px 0px 8px rgba(13, 110, 253, 0.9));
+            cursor: pointer;
+        }
+
+        /* ----- WIZARD IA ----- */
+        .wizard-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .wizard-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .wizard-step.active .wizard-circle {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+        }
+        .wizard-step.done .wizard-circle {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+        }
+        .wizard-step small { color: #94a3b8; font-size: 0.72rem; font-weight: 600; }
+        .wizard-step.active small { color: #3b82f6; }
+        .wizard-step.done small { color: #10b981; }
+        .wizard-line {
+            flex: 1;
+            height: 3px;
+            background: #e2e8f0;
+            min-width: 60px;
+            transition: background 0.4s ease;
+            margin-bottom: 18px;
+        }
+        .wizard-line.done { background: linear-gradient(90deg, #10b981, #3b82f6); }
+        .wizard-icon-bg {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .border-dashed { border-style: dashed !important; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(234,179,8,0.4); }
+            50% { transform: scale(1.04); box-shadow: 0 8px 25px rgba(234,179,8,0.6); }
+        }
+        .pulse-btn { animation: pulse 2s infinite; }
+    </style>
+</head>
+<body>
+
+    <!-- ================= HEADER / NAVBAR FIJO ================= -->
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <div class="container">
+            <!-- Logo a la izquierda -->
+            <!-- Nota: Usamos onclick="navigate('radar')" para que al hacer clic en el logo regrese al inicio -->
+            <a class="navbar-brand" href="#" onclick="navigate('radar'); return false;">
+                <!-- RUTA DEL LOGO: Ahora referenciando a la carpeta local del proyecto -->
+                <img src="./logos/logo_slogan.jpg" alt="Municipalidad de Miraflores">
+            </a>
+            
+            <!-- Botón hamburguesa para móviles -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Menú a la derecha con iconos -->
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-target="radar" onclick="navigate('radar'); return false;">
+                            <i class="fas fa-map-marked-alt me-2"></i>Radar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-target="registro" onclick="navigate('registro'); return false;">
+                            <i class="fas fa-user-plus me-2"></i>Inscripción
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-target="proyecto" onclick="navigate('proyecto'); return false;">
+                            <i class="fas fa-lightbulb me-2"></i>Crea tu Proyecto
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-target="muro" onclick="navigate('muro'); return false;">
+                            <i class="fas fa-award me-2"></i>Muro de Honor
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ================= CONTENEDOR PRINCIPAL SPA ================= -->
+    <main class="container my-5">
+
+        <!-- 1. SECCIÓN: Radar del Desarrollo -->
+        <div id="radar" class="spa-section active">
+            <div class="content-card">
+                <div class="row text-start">
+                    <!-- Columna Izquierda (Aprox 70% en pantallas grandes) -->
+                    <div class="col-lg-8 mb-4 mb-lg-0">
+                        <!-- HEADER DEL RADAR -->
+                        <div class="mb-4">
+                            <h1 class="fw-bold"><i class="fas fa-map-marked-alt text-success me-3"></i>Radar del Desarrollo</h1>
+                            <p class="lead mb-3">
+                                Explora las iniciativas de Miraflores y descubre cómo avanza tu distrito.<br>
+                                <span class="fs-6 text-muted">Conoce más sobre las normativas:</span>
+                            </p>
+                            <div class="mb-2">
+                                <a href="https://www.miraflores.gob.pe/wp-content/uploads/2025/04/ORD.-N%C2%B0-657-MM-Plan-local-concertado-2025-2034.pdf" target="_blank" class="btn btn-outline-primary px-3 me-2 rounded-pill shadow-sm">
+                                    <i class="fas fa-file-pdf"></i> PDLC 2025-2034
+                                </a>
+                                <a href="https://www.miraflores.gob.pe/desarrollo-urbano/plan-urbano-distrital-2019-2029/" target="_blank" class="btn btn-outline-primary px-3 rounded-pill shadow-sm">
+                                    <i class="fas fa-link"></i> PUD 2019-2029
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- CONTENEDOR DEL MAPA REAL -->
+                        <div class="position-relative">
+                            <div id="mapa" style="height: 700px; width: 100%; border-radius: 12px; border: 2px solid #e2e8f0; z-index: 1;"></div>
+                            <button id="btn-registrar-radar" class="btn btn-warning btn-lg shadow" style="position: absolute; bottom: 20px; right: 20px; z-index: 1000;" onclick="iniciarRegistroRadar()">📍 Registrar Idea de Mejora</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Columna Derecha (Aprox 30% en pantallas grandes) -->
+                    <div class="col-lg-4">
+                        <!-- Contenedor del Gráfico de Ideas -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold text-secondary fs-6 mb-3"><i class="fas fa-chart-pie"></i> Ideas y Denuncias por Zona</h5>
+                            <div style="position: relative; height: 260px; width: 100%;">
+                                <canvas id="zonasChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Resumen Zonal -->
+                        <div id="panel-resumen" style="height: 560px; overflow-y: auto; overflow-x: hidden; padding: 0; background: transparent;">
+                            <div class="position-sticky top-0" style="background-color: var(--color-fondo); z-index: 10; padding: 0 1.5rem 0.5rem 0; border-bottom: 1px dashed #cbd5e1;">
+                                <h4 class="text-primary mb-3"><i class="fas fa-list me-2"></i>Resumen Zonal</h4>
+                                <p id="resumen-texto" class="text-muted mb-0" style="min-height: 48px;">Haz clic en un sector del mapa para ver los proyectos sugeridos.</p>
+                            </div>
+                            <div id="lista-proyectos" class="mt-3 pe-2 pb-4">
+                                <!-- Aquí se inyectarán los proyectos -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. SECCIÓN: Inscripción de Agentes -->
+        <div id="registro" class="spa-section">
+            <div class="content-card text-center">
+                <div class="text-center mb-5">
+                    <h2 class="text-primary fw-bold"><i class="fas fa-user-plus"></i> Inscripción y Renovación de Agentes Participantes</h2>
+                    <p class="text-muted fs-5">Únete al proceso del Presupuesto Participativo 2027 o renueva tu acreditación.</p>
+                </div>
+                
+                <div class="row text-start">
+                    <!-- COLUMNA IZQUIERDA (70%) -->
+                    <div class="col-md-8 mb-4 mb-md-0">
+                        <!-- TABS -->
+                        <ul class="nav nav-pills nav-pills-custom mb-4 gap-3 border-bottom pb-4" id="registroTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold px-4 py-2 rounded-pill" id="nuevo-tab" data-bs-toggle="tab" data-bs-target="#nuevo-pane" type="button" role="tab" aria-controls="nuevo-pane" aria-selected="true"><i class="fas fa-file-signature me-2"></i>Nuevo Registro</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold px-4 py-2 rounded-pill" id="renovar-tab" data-bs-toggle="tab" data-bs-target="#renovar-pane" type="button" role="tab" aria-controls="renovar-pane" aria-selected="false"><i class="fas fa-sync-alt me-2"></i>Renovación PP 2027</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content bg-white p-4 border border-top-0 rounded-bottom shadow-sm" id="registroTabsContent">
+                            <!-- TAB 1: NUEVO REGISTRO -->
+                            <div class="tab-pane fade show active" id="nuevo-pane" role="tabpanel" aria-labelledby="nuevo-tab" tabindex="0">
+                                <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                                    <h4 class="text-primary mb-0">Inscribe a tu Organización (Primera Vez)</h4>
+                                    <button type="button" class="btn btn-outline-info btn-sm rounded-pill fw-bold" onclick="llenarEjemplo()"><i class="fas fa-magic me-1"></i> Llenar Ejemplo</button>
+                                </div>
+                                <form id="form-registro-agente">
+                                    <div class="accordion" id="accordionRegistro">
+                                        <!-- SECCIÓN 1: ORGANIZACIÓN -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingOrg">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOrg" aria-expanded="true" aria-controls="collapseOrg">
+                                                    <i class="fas fa-users text-primary me-2"></i> 1. Organización
+                                                </button>
+                                            </h2>
+                                            <div id="collapseOrg" class="accordion-collapse collapse show" aria-labelledby="headingOrg" data-bs-parent="#accordionRegistro">
+                                                <div class="accordion-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label for="orgNombre" class="form-label fw-semibold">Nombre de la Organización <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="orgNombre" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="orgZona" class="form-label fw-semibold">Zona Vecinal <span class="text-danger">*</span></label>
+                                                            <select class="form-select" id="orgZona" required>
+                                                                <option value="">Seleccione...</option>
+                                                                <option value="Zona 01">Zona 01</option>
+                                                                <option value="Zona 02">Zona 02</option>
+                                                                <option value="Zona 03">Zona 03</option>
+                                                                <option value="Zona 04">Zona 04</option>
+                                                                <option value="Zona 05">Zona 05</option>
+                                                                <option value="Zona 06">Zona 06</option>
+                                                                <option value="Zona 07">Zona 07</option>
+                                                                <option value="Zona 08">Zona 08</option>
+                                                                <option value="Zona 09">Zona 09</option>
+                                                                <option value="Zona 10">Zona 10</option>
+                                                                <option value="Zona 11">Zona 11</option>
+                                                                <option value="Zona 12">Zona 12</option>
+                                                                <option value="Zona 13">Zona 13</option>
+                                                                <option value="Zona 14">Zona 14</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <label for="orgDomicilio" class="form-label fw-semibold">Domicilio Legal <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="orgDomicilio" required>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="orgRUOS" class="form-label fw-semibold">
+                                                                N° de Registro (RUOS)
+                                                                <i class="fas fa-question-circle text-primary" data-bs-toggle="tooltip" title="Si eres Junta Vecinal ingresa tu Resolución Municipal. Si eres ONG o Institución Privada, ingresa tu Partida Registral de SUNARP."></i>
+                                                            </label>
+                                                            <input type="text" class="form-control" id="orgRUOS" placeholder="Ej: Res. N° 123-2025-GPV o Partida SUNARP N° 112233" required>
+                                                            <small class="text-muted">¿Tu organización aún no tiene RUOS? <a href="#">Conoce cómo registrarte gratis aquí</a></small>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="fecha-registro" class="form-label fw-semibold">Fecha de Registro (RUOS/SUNARP) <span class="text-danger">*</span></label>
+                                                            <input type="date" id="fecha-registro" class="form-control" required>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="orgFundacion" class="form-label fw-semibold">Fecha de Fundación <span class="text-danger">*</span></label>
+                                                            <input type="date" class="form-control" id="orgFundacion" required>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="orgMiembros" class="form-label fw-semibold">N° de Miembros <span class="text-danger">*</span></label>
+                                                            <input type="number" class="form-control" id="orgMiembros" required>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="orgTipo" class="form-label fw-semibold">Tipo de Organización <span class="text-danger">*</span> <i class="fas fa-question-circle text-primary" data-bs-toggle="tooltip" title="Ejemplo: Junta Vecinal, ONG, Asociación Civil, Club Deportivo, etc."></i></label>
+                                                            <input type="text" class="form-control" id="orgTipo" required>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="orgNivel" class="form-label fw-semibold">Nivel <span class="text-danger">*</span> <i class="fas fa-question-circle text-primary" data-bs-toggle="tooltip" title="Ejemplo: Distrital, Zonal, Vecinal, etc."></i></label>
+                                                            <input type="text" class="form-control" id="orgNivel" required>
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <label for="orgFines" class="form-label fw-semibold">Fines y Objetivo Social <span class="text-danger">*</span> <i class="fas fa-question-circle text-primary" data-bs-toggle="tooltip" title="Describe brevemente cuál es el propósito principal de tu organización (fines sociales, ambientales, culturales, etc.)"></i></label>
+                                                            <textarea class="form-control" id="orgFines" rows="2" maxlength="300" required></textarea>
+                                                            <small class="text-muted">Máximo 300 caracteres.</small>
+                                                        </div>
+
+                                                        <!-- Directiva -->
+                                                        <div class="col-12"><hr class="my-3"><p class="fw-bold text-secondary mb-3"><i class="fas fa-users me-1"></i> Directiva de la Organización</p></div>
+                                                        
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 bg-light border border-2 rounded">
+                                                                <h6 class="text-primary fw-bold mb-3"><i class="fas fa-user-tie"></i> Presidente</h6>
+                                                                <div class="row g-3">
+                                                                    <div class="col-12">
+                                                                        <label for="orgPresidente" class="form-label small fw-semibold text-muted">Nombre Completo <span class="text-danger">*</span></label>
+                                                                        <input type="text" class="form-control form-control-sm" id="orgPresidente" required>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <label for="orgPresidenteDNI" class="form-label small fw-semibold text-muted">DNI <span class="text-danger">*</span></label>
+                                                                        <input type="text" class="form-control form-control-sm" id="orgPresidenteDNI" pattern="\d{8}" placeholder="12345678" required>
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <label for="orgPresidenteNacimiento" class="form-label small fw-semibold text-muted">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                                                                        <input type="date" class="form-control form-control-sm" id="orgPresidenteNacimiento" required>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 bg-light border border-2 rounded">
+                                                                <h6 class="text-primary fw-bold mb-3"><i class="fas fa-calculator"></i> Tesorero(a)</h6>
+                                                                <div class="row g-3">
+                                                                    <div class="col-12">
+                                                                        <label for="orgTesorero" class="form-label small fw-semibold text-muted">Nombre Completo</label>
+                                                                        <input type="text" class="form-control form-control-sm" id="orgTesorero">
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <label for="orgTesoreroDNI" class="form-label small fw-semibold text-muted">DNI</label>
+                                                                        <input type="text" class="form-control form-control-sm" id="orgTesoreroDNI" pattern="\d{8}" placeholder="12345678">
+                                                                    </div>
+                                                                    <div class="col-6">
+                                                                        <label for="orgTesoreroNacimiento" class="form-label small fw-semibold text-muted">Fecha de Nacimiento</label>
+                                                                        <input type="date" class="form-control form-control-sm" id="orgTesoreroNacimiento">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-12"><hr class="my-3"><p class="fw-bold text-secondary mb-3"><i class="fas fa-calendar-check me-1"></i> Vigencia del Órgano Directivo</p></div>
+                                                        <div class="col-md-6">
+                                                            <label for="vigencia-inicio" class="form-label fw-semibold">Fecha de Inicio de Vigencia <span class="text-danger">*</span></label>
+                                                            <input type="date" id="vigencia-inicio" class="form-control" required>
+                                                            <small class="text-muted">Corresponde al inicio del periodo de la directiva actual.</small>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="vigencia-termino" class="form-label fw-semibold">Fecha de Término de Vigencia <span class="text-danger">*</span></label>
+                                                            <input type="date" id="vigencia-termino" class="form-control" required>
+                                                            <small class="text-muted">Corresponde al fin del periodo de la directiva actual.</small>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SECCIÓN 2: REPRESENTANTE TITULAR -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingTitular">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTitular" aria-expanded="false" aria-controls="collapseTitular">
+                                                    <i class="fas fa-user-tie text-primary me-2"></i> 2. Representante Titular
+                                                </button>
+                                            </h2>
+                                            <div id="collapseTitular" class="accordion-collapse collapse" aria-labelledby="headingTitular" data-bs-parent="#accordionRegistro">
+                                                <div class="accordion-body">
+                                                    <div class="mb-4 form-check bg-light p-3 rounded border shadow-sm d-flex align-items-center">
+                                                        <input type="checkbox" class="form-check-input ms-1 me-3 mt-0" id="chkMismoPresidente" style="transform: scale(1.6); cursor: pointer;">
+                                                        <label class="form-check-label fw-bold fs-5 text-primary" for="chkMismoPresidente" style="cursor: pointer;">
+                                                            <i class="fas fa-copy me-2"></i> El Representante Titular es el mismo Presidente
+                                                        </label>
+                                                    </div>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label for="repNombre" class="form-label fw-semibold">Nombres y Apellidos <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="repNombre" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="repDNI" class="form-label fw-semibold">DNI <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="repDNI" required pattern="\d{8}">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="repNacimiento" class="form-label fw-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                                                            <input type="date" class="form-control" id="repNacimiento" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="repCelular" class="form-label fw-semibold">Celular <span class="text-danger">*</span></label>
+                                                            <input type="tel" class="form-control" id="repCelular" required>
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <label for="repCorreo" class="form-label fw-semibold">Correo Electrónico <span class="text-danger">*</span></label>
+                                                            <input type="email" class="form-control" id="repCorreo" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="repProfesion" class="form-label fw-semibold">Profesión / Ocupación <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="repProfesion" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="repCargo" class="form-label fw-semibold">Cargo en la Organización <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="repCargo" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="repInstruccion" class="form-label fw-semibold">Grado de Instrucción <span class="text-danger">*</span></label>
+                                                            <select class="form-select" id="repInstruccion" required>
+                                                                <option value="">Seleccione...</option>
+                                                                <option value="Primaria">Primaria</option>
+                                                                <option value="Secundaria">Secundaria</option>
+                                                                <option value="Técnico">Técnico</option>
+                                                                <option value="Universitario">Universitario</option>
+                                                                <option value="Posgrado">Posgrado</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- SECCIÓN 3: REPRESENTANTE ALTERNO -->
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="headingAlterno">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAlterno" aria-expanded="false" aria-controls="collapseAlterno">
+                                                    <i class="fas fa-user text-secondary me-2"></i> 3. Representante Alterno
+                                                </button>
+                                            </h2>
+                                            <div id="collapseAlterno" class="accordion-collapse collapse" aria-labelledby="headingAlterno" data-bs-parent="#accordionRegistro">
+                                                <div class="accordion-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <label for="altNombre" class="form-label fw-semibold">Nombres y Apellidos <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="altNombre" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="altDNI" class="form-label fw-semibold">DNI <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="altDNI" required pattern="\d{8}">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="altNacimiento" class="form-label fw-semibold">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                                                            <input type="date" class="form-control" id="altNacimiento" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="altCelular" class="form-label fw-semibold">Celular <span class="text-danger">*</span></label>
+                                                            <input type="tel" class="form-control" id="altCelular" required>
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <label for="altCorreo" class="form-label fw-semibold">Correo Electrónico <span class="text-danger">*</span></label>
+                                                            <input type="email" class="form-control" id="altCorreo" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="altProfesion" class="form-label fw-semibold">Profesión / Ocupación <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="altProfesion" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="altCargo" class="form-label fw-semibold">Cargo en la Organización <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" id="altCargo" required>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label for="altInstruccion" class="form-label fw-semibold">Grado de Instrucción <span class="text-danger">*</span></label>
+                                                            <select class="form-select" id="altInstruccion" required>
+                                                                <option value="">Seleccione...</option>
+                                                                <option value="Primaria">Primaria</option>
+                                                                <option value="Secundaria">Secundaria</option>
+                                                                <option value="Técnico">Técnico</option>
+                                                                <option value="Universitario">Universitario</option>
+                                                                <option value="Posgrado">Posgrado</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid mt-4">
+                                        <button type="submit" class="btn btn-primary btn-lg fw-bold"><i class="fas fa-file-pdf"></i> Guardar Datos y Generar Expediente PDF</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- TAB 2: RENOVACIÓN -->
+                            <div class="tab-pane fade" id="renovar-pane" role="tabpanel" aria-labelledby="renovar-tab" tabindex="0">
+                                <h4 class="text-success mb-4 border-bottom pb-2">Renovación PP 2027</h4>
+                                <p class="text-muted">Si tu organización ya participó en años anteriores, solo ingresa el DNI del representante registrado (DNI ejemplo: 44556677).</p>
+                                
+                                <div class="input-group mb-4">
+                                    <input type="text" class="form-control form-control-lg" id="buscarDNI" placeholder="Ingresa tu DNI" pattern="\d{8}">
+                                    <button class="btn btn-success" type="button" onclick="buscarYRenovar()"><i class="fas fa-search"></i> Buscar</button>
+                                </div>
+
+                                <div id="resultado-busqueda" class="d-none alert alert-light border shadow-sm">
+                                    <!-- Aquí se inyectarán los datos encontrados -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA (30%) -->
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-0 bg-light">
+                            <div class="card-body">
+                                <h4 class="card-title text-primary fw-bold mb-3"><i class="fas fa-clipboard-check"></i> Agentes Participantes 2027</h4>
+                                <p class="card-text text-muted small">Conoce a las organizaciones de Miraflores ya inscritas para este proceso.</p>
+                                
+                                <div class="table-responsive bg-white rounded mt-3" style="max-height: 400px; overflow-y: auto;">
+                                    <table class="table table-hover table-sm align-middle mb-0">
+                                        <thead class="table-dark sticky-top">
+                                            <tr>
+                                                <th>Organización</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-agentes">
+                                            <!-- Inyectado por JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- Contenedor del Gráfico de Agentes Inscritos -->
+                                <div class="mt-4 border-top pt-3">
+                                    <h5 class="fw-bold text-secondary fs-6 mb-3"><i class="fas fa-chart-bar"></i> Agentes Inscritos por Zona</h5>
+                                    <div style="position: relative; height: 250px; width: 100%;">
+                                        <canvas id="agentesZonaChart"></canvas>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. SECCIÓN: Crea tu Proyecto con IA -->
+        <div id="proyecto" class="spa-section">
+            <div class="content-card">
+                <div class="text-center mb-4">
+                    <h1><i class="fas fa-robot text-warning me-3"></i>Crea tu Proyecto con IA</h1>
+                    <p class="lead">Convierte tu idea vecinal en un proyecto técnico oficial en minutos.</p>
+                </div>
+
+                <!-- Barra de progreso del Wizard -->
+                <div class="d-flex justify-content-center align-items-center gap-0 mb-5" id="wizard-steps">
+                    <div class="wizard-step active" id="ws-1">
+                        <div class="wizard-circle">1</div>
+                        <small>Identificación</small>
+                    </div>
+                    <div class="wizard-line" id="wl-1"></div>
+                    <div class="wizard-step" id="ws-2">
+                        <div class="wizard-circle">2</div>
+                        <small>Tu Idea</small>
+                    </div>
+                    <div class="wizard-line" id="wl-2"></div>
+                    <div class="wizard-step" id="ws-3">
+                        <div class="wizard-circle">3</div>
+                        <small>Formular</small>
+                    </div>
+                    <div class="wizard-line" id="wl-3"></div>
+                    <div class="wizard-step" id="ws-4">
+                        <div class="wizard-circle">4</div>
+                        <small>Evidencias</small>
+                    </div>
+                    <div class="wizard-line" id="wl-4"></div>
+                    <div class="wizard-step" id="ws-5">
+                        <div class="wizard-circle">5</div>
+                        <small>Resultado</small>
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+
+                        <!-- PASO 1: Identificación -->
+                        <div class="wizard-panel" id="panel-1">
+                            <div class="text-center mb-4">
+                                <div class="wizard-icon-bg mb-3"><i class="fas fa-id-card fa-2x text-primary"></i></div>
+                                <h4 class="fw-bold">Paso 1: Identifícate</h4>
+                                <p class="text-muted">Ingresa tu DNI para verificar que eres un agente participante registrado (DNI ejemplo: 44556677).</p>
+                            </div>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-fingerprint text-primary"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="dniProyecto" placeholder="Ingresa tu DNI (8 dígitos)" maxlength="8" pattern="\d{8}">
+                                <button class="btn btn-primary px-4 fw-bold" onclick="validarDniProyecto()">
+                                    <i class="fas fa-search me-2"></i>Validar
+                                </button>
+                            </div>
+                            <div id="dni-feedback" class="mt-3"></div>
+                        </div>
+
+                        <!-- PASO 2: Tu Idea -->
+                        <div class="wizard-panel d-none" id="panel-2">
+                            <div class="text-center mb-4">
+                                <div class="wizard-icon-bg mb-3"><i class="fas fa-lightbulb fa-2x text-warning"></i></div>
+                                <h4 class="fw-bold">Paso 2: Cuéntanos tu Idea</h4>
+                                <p class="text-muted">Describe el problema que ves en tu zona con tus propias palabras. No te preocupes por el formato técnico, ¡la IA lo hará por ti!</p>
+                            </div>
+                            <div id="agente-info-banner" class="alert alert-success d-flex align-items-center mb-3 rounded-3">
+                                <i class="fas fa-check-circle me-2 fs-5"></i>
+                                <div id="agente-info-text"></div>
+                            </div>
+                            <div id="radar-ideas-sugeridas" class="mb-3"></div>
+                            <textarea id="ideaTexto" class="form-control form-control-lg shadow-sm" rows="6"
+                                placeholder="Ej: En mi parque ocurren robos en la noche porque no hay iluminación. Propongo poner postes LED y cámaras de videovigilancia para mejorar la seguridad de los vecinos..."></textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted"><span id="char-counter">0</span> caracteres</small>
+                                <small class="text-muted">Mín. 50 caracteres</small>
+                            </div>
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-secondary me-2" onclick="wizardGoTo(1)"><i class="fas fa-arrow-left me-1"></i>Atrás</button>
+                                <button class="btn btn-primary px-5 fw-bold" onclick="wizardGoTo(3)">
+                                    Continuar <i class="fas fa-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 3: La Magia -->
+                        <div class="wizard-panel d-none" id="panel-3">
+                            <div class="text-center mb-4">
+                                <div class="wizard-icon-bg mb-3"><i class="fas fa-magic fa-2x text-purple"></i></div>
+                                <h4 class="fw-bold">Paso 3: Activar el Asistente IA</h4>
+                                <p class="text-muted">Nuestro motor analizará tu descripción y estructurará un proyecto técnico alineado con los Objetivos Estratégicos Distritales (OED) de Miraflores.</p>
+                            </div>
+                            <div class="text-center p-4 bg-light rounded-4 border border-dashed">
+                                <div class="mb-3">
+                                    <span class="badge bg-secondary me-1">Seguridad</span>
+                                    <span class="badge bg-success me-1">Medio Ambiente</span>
+                                    <span class="badge bg-info me-1">Movilidad</span>
+                                    <span class="badge bg-warning text-dark me-1">Infraestructura</span>
+                                    <span class="badge bg-danger">Salud</span>
+                                </div>
+                                <p class="text-muted small">La IA detectará la categoría automáticamente y asignará el OED correspondiente.</p>
+                                <button class="btn btn-lg btn-warning fw-bold px-5 shadow pulse-btn" id="btn-formular" onclick="simularIAGenerativa()">
+                                    <i class="fas fa-wand-magic-sparkles me-2"></i>✨ Formular Proyecto con IA
+                                </button>
+                                <div id="ia-loading" class="d-none mt-3">
+                                    <div class="spinner-border text-warning" role="status"></div>
+                                    <p class="text-muted mt-2 small">Analizando tu idea y estructurando el proyecto...</p>
+                                </div>
+                            </div>
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-secondary" onclick="wizardGoTo(2)"><i class="fas fa-arrow-left me-1"></i>Editar idea</button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 4: Ubicación y Evidencias -->
+                        <div class="wizard-panel d-none" id="panel-4">
+                            <div class="text-center mb-4">
+                                <div class="wizard-icon-bg mb-3"><i class="fas fa-map-location-dot fa-2x text-info"></i></div>
+                                <h4 class="fw-bold">Paso 4: Ubicación y Evidencias</h4>
+                                <p class="text-muted">Indica dónde se realizará el proyecto y adjunta fotos para sustentar tu propuesta.</p>
+                            </div>
+                            
+                            <!-- Croquis -->
+                            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div class="card-body">
+                                    <h5 class="fw-bold"><i class="fas fa-map-marker-alt text-danger me-2"></i>Croquis de Ubicación</h5>
+                                    <p class="text-muted small">Mueve el marcador al lugar exacto de tu proyecto.</p>
+                                    <div id="mini-mapa" style="height: 500px; width: 100%; border-radius: 8px; border: 1px solid #dee2e6;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Fotos -->
+                            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div class="card-body">
+                                    <h5 class="fw-bold"><i class="fas fa-camera text-primary me-2"></i>Fotografías (Opcional)</h5>
+                                    
+                                    <div class="mb-3">
+                                        <label for="fotos-problema" class="form-label fw-semibold">Fotos del Problema</label>
+                                        <input type="file" class="form-control" id="fotos-problema" accept="image/*" multiple>
+                                        <div class="form-text">Sube máximo 2 fotos mostrando la situación actual.</div>
+                                    </div>
+
+                                    <div>
+                                        <label for="fotos-solucion" class="form-label fw-semibold">Imágenes Referenciales de la Solución</label>
+                                        <input type="file" class="form-control" id="fotos-solucion" accept="image/*" multiple>
+                                        <div class="form-text">Sube máximo 2 fotos de cómo te imaginas la solución (ej: un parque terminado, faroles nuevos).</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button class="btn btn-outline-secondary me-2" onclick="wizardGoTo(3)"><i class="fas fa-arrow-left me-1"></i>Atrás</button>
+                                <button class="btn btn-primary px-5 fw-bold" onclick="wizardGoTo(5)">Continuar <i class="fas fa-arrow-right ms-1"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- PASO 5: Resultado -->
+                        <div class="wizard-panel d-none" id="panel-5">
+                            <div class="text-center mb-4">
+                                <div class="wizard-icon-bg mb-3" style="background: linear-gradient(135deg,#d4edda,#c3e6cb)">
+                                    <i class="fas fa-file-circle-check fa-2x text-success"></i>
+                                </div>
+                                <h4 class="fw-bold text-success">¡Proyecto Estructurado!</h4>
+                                <p class="text-muted">Tu idea ha sido convertida en un proyecto técnico oficial.</p>
+                            </div>
+
+                            <!-- Tarjeta de resultado -->
+                            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" id="resultado-ia">
+                                <div class="card-header text-white py-3" id="resultado-header" style="background: linear-gradient(135deg, #1a237e, #0d47a1);">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <i class="fas fa-folder-open fa-2x opacity-75"></i>
+                                        <div>
+                                            <div class="small opacity-75" id="resultado-oed"></div>
+                                            <h5 class="mb-0 fw-bold" id="resultado-titulo"></h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="text-muted small fw-bold text-uppercase"><i class="fas fa-users me-1"></i>Población Afectada</label>
+                                            <p class="mb-0" id="resultado-poblacion"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="text-muted small fw-bold text-uppercase"><i class="fas fa-chart-area me-1"></i>Impacto</label>
+                                            <p class="mb-0" id="resultado-impacto"></p>
+                                        </div>
+                                        <div class="col-12"><hr class="my-1"></div>
+                                        <div class="col-12">
+                                            <label class="text-muted small fw-bold text-uppercase"><i class="fas fa-puzzle-piece me-1"></i>Componentes del Proyecto</label>
+                                            <div id="resultado-componentes" class="mt-2"></div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="alert alert-primary rounded-3 mb-0 py-2">
+                                                <i class="fas fa-bullseye me-2"></i>
+                                                <strong>Alineación Estratégica:</strong> <span id="resultado-alineacion"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button class="btn btn-success btn-lg fw-bold shadow" onclick="generarPdfAnexo05()">
+                                    <i class="fas fa-file-pdf me-2"></i>📄 Descargar Anexo 05 Oficial
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="reiniciarWizard()">
+                                    <i class="fas fa-redo me-1"></i>Formular otro proyecto
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. SECCIÓN: Muro de Honor -->
+        <div id="muro" class="spa-section">
+            <div id="muro-honor" class="container mt-4 mb-5 pb-5">
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-primary" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">🏆 Muro de Honor 2027</h1>
+                    <p class="lead text-muted">Reconocemos a los ciudadanos y organizaciones que transforman Miraflores.</p>
+                </div>
+
+                <!-- Bloque 1: Top Organizaciones -->
+                <div class="mb-5">
+                    <h3 class="fw-bold mb-4 border-bottom pb-2 text-primary"><i class="fas fa-crown text-warning me-2"></i>Top Organizaciones Proponentes</h3>
+                    <div class="row g-4 justify-content-center" id="muro-top-orgs">
+                        <!-- Inyectado vía JS -->
+                    </div>
+                </div>
+
+                <!-- Bloque 2: Comité de Vigilancia -->
+                <div class="bg-light rounded-3 p-4 shadow-sm mb-5 border border-primary border-opacity-10 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-25">
+                        <i class="fas fa-shield-alt fa-10x text-primary"></i>
+                    </div>
+                    <div class="text-center mb-4 position-relative z-1">
+                        <h3 class="fw-bold text-primary">Héroes de la Transparencia</h3>
+                        <p class="text-muted mb-0">Comité de Vigilancia: Ellos son los 4 vecinos elegidos democráticamente para fiscalizar la ejecución de nuestras obras.</p>
+                    </div>
+                    <div class="row g-4 justify-content-center position-relative z-1" id="muro-vigilancia">
+                        <!-- Inyectado vía JS -->
+                    </div>
+                </div>
+
+                <!-- Bloque 3: Nuevos Agentes -->
+                <div>
+                    <h3 class="fw-bold mb-4 border-bottom pb-2 text-primary"><i class="fas fa-seedling text-success me-2"></i>Bienvenidos Nuevos Agentes Participantes</h3>
+                    <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                        <ul class="list-group list-group-flush" id="muro-nuevos">
+                            <!-- Inyectado vía JS -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    
+    <!-- Modal Radar -->
+    <div class="modal fade" id="modalRadar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fas fa-map-pin me-2"></i>Registrar Reporte o Propuesta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-radar" onsubmit="guardarIdeaRadar(event)">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tipo de Registro</label>
+                            <select id="radar-tipo" class="form-select" required>
+                                <option value="" disabled selected>Selecciona el tipo...</option>
+                                <option value="Idea / Propuesta de Mejora">Idea / Propuesta de Mejora</option>
+                                <option value="Denuncia / Queja">Denuncia / Queja</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Zona Vecinal</label>
+                            <select id="radar-zona" class="form-select" required>
+                                <option value="" disabled selected>Selecciona tu zona...</option>
+                                <option value="Zona 01">Zona 01</option>
+                                <option value="Zona 02">Zona 02</option>
+                                <option value="Zona 03">Zona 03</option>
+                                <option value="Zona 04">Zona 04</option>
+                                <option value="Zona 05">Zona 05</option>
+                                <option value="Zona 06">Zona 06</option>
+                                <option value="Zona 07">Zona 07</option>
+                                <option value="Zona 08">Zona 08</option>
+                                <option value="Zona 09">Zona 09</option>
+                                <option value="Zona 10">Zona 10</option>
+                                <option value="Zona 11">Zona 11</option>
+                                <option value="Zona 12">Zona 12</option>
+                                <option value="Zona 13">Zona 13</option>
+                                <option value="Zona 14">Zona 14</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Categoría OED</label>
+                            <select id="radar-cat" class="form-select" required>
+                                <option value="" disabled selected>Selecciona categoría...</option>
+                                <option value="Seguridad Ciudadana">Seguridad Ciudadana</option>
+                                <option value="Salud y Deporte">Salud y Deporte</option>
+                                <option value="Calidad Ambiental">Calidad Ambiental</option>
+                                <option value="Habitabilidad y Transporte">Habitabilidad y Transporte</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Describe tu Reporte o Propuesta</label>
+                            <textarea id="radar-idea" class="form-control" rows="4" required placeholder="Ej. Necesitamos más iluminación en el parque..."></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning fw-bold fs-5">🚀 Publicar en el Mapa</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+    <!-- ================= SCRIPTS ================= -->
+    <!-- Bootstrap 5 JS Bundle (Requerido para que funcione el menú hamburguesa) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <!-- jsPDF para generar expedientes PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script src="./logos.js"></script>
+    <!-- Lógica Vanilla JS de la Single Page Application (SPA) y Mapas -->
+    <script src="./script.js"></script>
+</body>
+</html>
