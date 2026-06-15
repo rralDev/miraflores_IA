@@ -2,7 +2,9 @@
 
 Una plataforma web interactiva y moderna diseñada para modernizar y democratizar el proceso del **Presupuesto Participativo** en la Municipalidad de Miraflores. Integra inteligencia artificial para asistir a los vecinos en la formulación de proyectos técnicos oficiales.
 
-**📺 Mira el Video Tutorial:** [Haz clic aquí para ver cómo funciona el sistema](https://youtu.be/6myr3dVJdIQ)
+**📺 Mira el Video Tutorial:**
+
+[![Tutorial Presupuesto Participativo](https://img.youtube.com/vi/6myr3dVJdIQ/0.jpg)](https://youtu.be/6myr3dVJdIQ)
 
 ## 🚀 Características Principales
 
